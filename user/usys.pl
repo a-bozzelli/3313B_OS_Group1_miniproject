@@ -42,3 +42,11 @@ entry("getpid");
 entry("sbrk");
 entry("pause");
 entry("uptime");
+ 
+ # =========================================================
+ # FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ # Syscall stub for proccost(), which reports per-process
+ # resource usage and cost scores.
+ # =========================================================
+
+ entry("proccost");

@@ -2,6 +2,30 @@
 
 struct stat;
 
+/* =========================================================
+ * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ * User-visible structure mirroring kernel/proc.h:proccostinfo.
+ * This must stay layout-compatible with the kernel definition
+ * so that the proccost() syscall ABI remains correct.
+ * ========================================================= */
+
+// ===== FEATURE 2 START: Expensive Process Analysis =====
+
+struct proccostinfo {
+	int    pid;                 // Process ID
+	char   name[16];            // Process name (truncated)
+
+	uint64 cpu_ticks;           // CPU ticks while RUNNING
+	uint64 sched_count;         // Number of times scheduled
+	uint64 disk_writes;         // Approximate disk-backed write() count
+
+	// Cost score as computed by the kernel:
+	//   cost = cpu_ticks + 5 * disk_writes
+	uint64 cost;
+};
+
+// ===== FEATURE 2 END: Expensive Process Analysis =====
+
 // system calls
 int fork(void);
 int exit(int) __attribute__((noreturn));
@@ -24,6 +48,19 @@ int getpid(void);
 char* sys_sbrk(int,int);
 int pause(int);
 int uptime(void);
+
+/* =========================================================
+ * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ * User-facing prototype for the proccost() syscall.
+ *
+ * proccost(info, max) fills up to max entries in the array
+ * pointed to by info and returns the number of entries
+ * written, or -1 on error.
+ * ========================================================= */
+
+// ===== FEATURE 2 START: Expensive Process Analysis =====
+int proccost(struct proccostinfo *info, int max);
+// ===== FEATURE 2 END: Expensive Process Analysis =====
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -20,3 +20,12 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+
+/* =========================================================
+ * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ * System call number for retrieving per-process cost data.
+ * ========================================================= */
+
+// ===== FEATURE 2 START: Expensive Process Analysis =====
+#define SYS_proccost 22
+// ===== FEATURE 2 END: Expensive Process Analysis =====

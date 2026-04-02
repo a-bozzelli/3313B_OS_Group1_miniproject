@@ -171,6 +171,25 @@ clockintr()
     release(&tickslock);
   }
 
+  /* =========================================================
+   * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+   * Attribute one CPU tick to the currently running process
+   * on this CPU whenever we receive a timer interrupt.
+   *
+   * This is intentionally lightweight and does not take
+   * p->lock, since timer interrupts can arrive while the
+   * process holds locks. The counters are best-effort and
+   * may experience small races, which is acceptable for
+   * profiling-style accounting.
+   * ========================================================= */
+
+  // ===== FEATURE 2 START: Expensive Process Analysis =====
+  struct proc *p = myproc();
+  if(p && p->state == RUNNING) {
+    p->cpu_ticks++;
+  }
+  // ===== FEATURE 2 END: Expensive Process Analysis =====
+
   // ask for the next timer interrupt. this also clears
   // the interrupt request. 1000000 is about a tenth
   // of a second.

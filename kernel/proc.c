@@ -125,6 +125,18 @@ found:
   p->pid = allocpid();
   p->state = USED;
 
+  /* =========================================================
+   * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+   * Initialize per-process accounting fields when a proc
+   * structure is first allocated.
+   * ========================================================= */
+
+  // ===== FEATURE 2 START: Expensive Process Analysis =====
+  p->cpu_ticks = 0;
+  p->sched_count = 0;
+  p->disk_writes = 0;
+  // ===== FEATURE 2 END: Expensive Process Analysis =====
+
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
@@ -169,6 +181,18 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  /* =========================================================
+   * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+   * Clear per-process accounting fields when a proc
+   * structure is freed and returned to the UNUSED pool.
+   * ========================================================= */
+
+  // ===== FEATURE 2 START: Expensive Process Analysis =====
+  p->cpu_ticks = 0;
+  p->sched_count = 0;
+  p->disk_writes = 0;
+  // ===== FEATURE 2 END: Expensive Process Analysis =====
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -441,6 +465,18 @@ scheduler(void)
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
+        /* =========================================================
+         * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+         * Bump sched_count every time this process is selected
+         * to run by the scheduler. This is done while holding
+         * p->lock so that the increment is consistent with the
+         * state transition to RUNNING.
+         * ========================================================= */
+
+        // ===== FEATURE 2 START: Expensive Process Analysis =====
+        p->sched_count++;
+        // ===== FEATURE 2 END: Expensive Process Analysis =====
+
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.

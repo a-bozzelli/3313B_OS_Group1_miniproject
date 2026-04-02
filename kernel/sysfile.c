@@ -91,6 +91,25 @@ sys_write(void)
   if(argfd(0, 0, &f) < 0)
     return -1;
 
+  /* =========================================================
+   * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+   * Approximate per-process disk write accounting.
+   *
+   * If this write() targets an inode-backed file (FD_INODE),
+   * we treat it as a disk write operation and bump the
+   * calling process's disk_writes counter once. This keeps
+   * the implementation simple and avoids invasive changes
+   * in the file system layer while still giving a useful
+   * proxy for disk activity.
+   * ========================================================= */
+
+   // ===== FEATURE 2 START: Expensive Process Analysis =====
+   struct proc *pr = myproc();
+   if(pr && f->type == FD_INODE) {
+     pr->disk_writes++;
+   }
+   // ===== FEATURE 2 END: Expensive Process Analysis =====
+
   return filewrite(f, p, n);
 }
 
