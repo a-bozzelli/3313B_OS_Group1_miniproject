@@ -148,7 +148,11 @@ sys_proccost(void)
   // view of its fields.
   for(struct proc *q = proc; q < &proc[NPROC] && count < max; q++) {
     acquire(&q->lock);
-    if(q->state != UNUSED) {
+    // Only report meaningful process entries. Skip slots that
+    // are completely unused or merely reserved (USED), since
+    // they do not correspond to runnable/sleeping/zombie
+    // processes with interesting accounting data.
+    if(q->state != UNUSED && q->state != USED) {
       local[count].pid = q->pid;
       safestrcpy(local[count].name, q->name, sizeof(local[count].name));
       local[count].cpu_ticks = q->cpu_ticks;

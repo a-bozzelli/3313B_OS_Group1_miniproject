@@ -146,6 +146,8 @@ UPROGS=\
 	$U/_forphan\
 	$U/_dorphan\
 	$U/_proccost\
+	$U/_spin\
+	$U/_writer\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
