@@ -8,6 +8,8 @@
 
 struct spinlock tickslock;
 uint ticks;
+uint active_ticks;   // ticks when at least one process was running
+uint idle_ticks;     // ticks when no process was running (wfi)
 
 extern char trampoline[], uservec[];
 
@@ -168,6 +170,11 @@ clockintr()
     acquire(&tickslock);
     ticks++;
     wakeup(&ticks);
+    // Track active vs idle CPU time
+    if(mycpu()->proc != 0)
+      active_ticks++;
+    else
+      idle_ticks++;
     release(&tickslock);
   }
 
