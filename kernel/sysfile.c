@@ -85,7 +85,7 @@ sys_write(void)
   struct file *f;
   int n;
   uint64 p;
-  
+
   argaddr(1, &p);
   argint(2, &n);
   if(argfd(0, 0, &f) < 0)
@@ -412,7 +412,7 @@ sys_chdir(void)
   char path[MAXPATH];
   struct inode *ip;
   struct proc *p = myproc();
-  
+
   begin_op();
   if(argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0){
     end_op();
@@ -440,6 +440,7 @@ sys_exec(void)
 
   argaddr(1, &uargv);
   if(argstr(0, path, MAXPATH) < 0) {
+    printf("sys_exec: argstr(path) failed\n");
     return -1;
   }
   memset(argv, 0, sizeof(argv));
@@ -448,6 +449,7 @@ sys_exec(void)
       goto bad;
     }
     if(fetchaddr(uargv+sizeof(uint64)*i, (uint64*)&uarg) < 0){
+      printf("sys_exec: fetchaddr failed for argv index %d\n", i);
       goto bad;
     }
     if(uarg == 0){
@@ -462,6 +464,9 @@ sys_exec(void)
   }
 
   int ret = kexec(path, argv);
+  if(ret < 0) {
+    printf("sys_exec: kexec returned -1 for path %s\n", path);
+  }
 
   for(i = 0; i < NELEM(argv) && argv[i] != 0; i++)
     kfree(argv[i]);

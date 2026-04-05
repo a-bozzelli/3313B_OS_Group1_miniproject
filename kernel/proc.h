@@ -27,6 +27,7 @@ struct cpu {
 };
 
 extern struct cpu cpus[NCPU];
+// NOTE: the global `proc` array is declared after `struct proc` is defined.
 
 // per-process data for the trap handling code in trampoline.S.
 // sits in a page by itself just under the trampoline page in the
@@ -104,4 +105,9 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  // Usage accounting (lifetime, since process creation)
+  uint64 cpu_ticks;           // total CPU ticks used by this process
+  uint64 cpu_ticks_limit;     // 0 means no limit
 };
+
+extern struct proc proc[NPROC];

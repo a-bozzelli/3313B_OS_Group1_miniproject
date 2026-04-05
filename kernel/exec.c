@@ -39,6 +39,7 @@ kexec(char *path, char **argv)
 
   // Open the executable file.
   if((ip = namei(path)) == 0){
+    printf("kexec: namei(%s) failed\n", path);
     end_op();
     return -1;
   }
@@ -46,33 +47,54 @@ kexec(char *path, char **argv)
 
   // Read the ELF header.
   if(readi(ip, 0, (uint64)&elf, 0, sizeof(elf)) != sizeof(elf))
-    goto bad;
+    {
+      printf("kexec: readi ELF header failed for %s\n", path);
+      goto bad;
+    }
 
   // Is this really an ELF file?
   if(elf.magic != ELF_MAGIC)
-    goto bad;
+    {
+      printf("kexec: ELF magic mismatch for %s: 0x%x\n", path, elf.magic);
+      goto bad;
+    }
 
   if((pagetable = proc_pagetable(p)) == 0)
-    goto bad;
+    {
+      printf("kexec: proc_pagetable failed\n");
+      goto bad;
+    }
 
   // Load program into memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, 0, (uint64)&ph, off, sizeof(ph)) != sizeof(ph))
-      goto bad;
+      {
+        printf("kexec: readi program header failed for %s\n", path);
+        goto bad;
+      }
     if(ph.type != ELF_PROG_LOAD)
       continue;
     if(ph.memsz < ph.filesz)
-      goto bad;
+      {
+        printf("kexec: ph.memsz < ph.filesz for %s\n", path);
+        goto bad;
+      }
     if(ph.vaddr + ph.memsz < ph.vaddr)
       goto bad;
     if(ph.vaddr % PGSIZE != 0)
       goto bad;
     uint64 sz1;
     if((sz1 = uvmalloc(pagetable, sz, ph.vaddr + ph.memsz, flags2perm(ph.flags))) == 0)
-      goto bad;
+      {
+        printf("kexec: uvmalloc failed for %s\n", path);
+        goto bad;
+      }
     sz = sz1;
     if(loadseg(pagetable, ph.vaddr, ip, ph.off, ph.filesz) < 0)
-      goto bad;
+      {
+        printf("kexec: loadseg failed for %s\n", path);
+        goto bad;
+      }
   }
   iunlockput(ip);
   end_op();
@@ -126,7 +148,7 @@ kexec(char *path, char **argv)
     if(*s == '/')
       last = s+1;
   safestrcpy(p->name, last, sizeof(p->name));
-    
+
   // Commit to the user image.
   oldpagetable = p->pagetable;
   p->pagetable = pagetable;
@@ -168,6 +190,6 @@ loadseg(pagetable_t pagetable, uint64 va, struct inode *ip, uint offset, uint sz
     if(readi(ip, 0, (uint64)pa, offset+i, n) != n)
       return -1;
   }
-  
+
   return 0;
 }

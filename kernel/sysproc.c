@@ -107,3 +107,53 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// set usage limit for a process (max CPU ticks)
+uint64
+sys_setusagelimit(void)
+{
+  int pid;
+  int max;
+  argint(0, &pid);
+  argint(1, &max);
+
+  for(struct proc *p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->pid == pid){
+      p->cpu_ticks_limit = (uint64)max;
+      release(&p->lock);
+      return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
+}
+
+// get usage stats for a process: copy {cpu_ticks, cpu_ticks_limit} to user addr
+uint64
+sys_getusagestats(void)
+{
+  int pid;
+  uint64 addr;
+  argint(0, &pid);
+  argaddr(1, &addr);
+
+  struct {
+    uint64 cpu_ticks;
+    uint64 cpu_ticks_limit;
+  } stats;
+
+  for(struct proc *p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->pid == pid){
+      stats.cpu_ticks = p->cpu_ticks;
+      stats.cpu_ticks_limit = p->cpu_ticks_limit;
+      release(&p->lock);
+      if(either_copyout(1, addr, (char *)&stats, sizeof(stats)) < 0)
+        return -1;
+      return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
+}
