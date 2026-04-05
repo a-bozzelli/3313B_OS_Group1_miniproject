@@ -13,6 +13,8 @@ struct proc proc[NPROC];
 struct proc *initproc;
 
 int nextpid = 1;
+
+uint context_switches = 0;  // total scheduler context switches since boot
 struct spinlock pid_lock;
 
 extern void forkret(void);
@@ -446,6 +448,7 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+        context_switches++;
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
