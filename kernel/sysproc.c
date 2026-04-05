@@ -95,6 +95,37 @@ sys_kill(void)
   return kkill(pid);
 }
 
+uint64
+sys_setpowermode(void)
+{
+  int pid;
+  int mode;
+
+  argint(0, &pid);
+  argint(1, &mode);
+  return setpowermode_pid(pid, mode);
+}
+
+uint64
+sys_setcpulimit(void)
+{
+  int pid;
+  int limit;
+
+  argint(0, &pid);
+  argint(1, &limit);
+  return setcpulimit_pid(pid, limit);
+}
+
+uint64
+sys_getcputicks(void)
+{
+  int pid;
+
+  argint(0, &pid);
+  return getcputicks_pid(pid);
+}
+
 // return how many clock tick interrupts have occurred
 // since start.
 uint64
