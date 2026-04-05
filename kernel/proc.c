@@ -124,6 +124,12 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->power_mode = POWER_NORMAL;
+  p->cpu_budget = 0;
+  p->ticks_used = 0;
+  p->ticks_total = 0;
+  p->budget_window_start = 0;
+  p->eco_skip_counter = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -168,6 +174,12 @@ freeproc(struct proc *p)
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
+  p->power_mode = POWER_NORMAL;
+  p->cpu_budget = 0;
+  p->ticks_used = 0;
+  p->ticks_total = 0;
+  p->budget_window_start = 0;
+  p->eco_skip_counter = 0;
   p->state = UNUSED;
 }
 
@@ -289,6 +301,14 @@ kfork(void)
   np->cwd = idup(p->cwd);
 
   safestrcpy(np->name, p->name, sizeof(p->name));
+  acquire(&p->lock);
+  np->power_mode = p->power_mode;
+  np->cpu_budget = p->cpu_budget;
+  np->ticks_used = 0;
+  np->ticks_total = 0;
+  np->budget_window_start = p->budget_window_start;
+  np->eco_skip_counter = 0;
+  release(&p->lock);
 
   pid = np->pid;
 
@@ -437,10 +457,38 @@ scheduler(void)
     intr_on();
     intr_off();
 
+    acquire(&tickslock);
+    uint now = ticks;
+    release(&tickslock);
+
     int found = 0;
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
+        int can_run = 1;
+
+        if(p->cpu_budget > 0) {
+          if(now - p->budget_window_start >= CPU_BUDGET_WINDOW_TICKS) {
+            p->budget_window_start = now;
+            p->ticks_used = 0;
+          }
+          if(p->ticks_used >= p->cpu_budget)
+            can_run = 0;
+        }
+
+        if(can_run && p->power_mode == POWER_ECO) {
+          p->eco_skip_counter++;
+          if(p->eco_skip_counter < ECO_SKIP_INTERVAL)
+            can_run = 0;
+          else
+            p->eco_skip_counter = 0;
+        }
+
+        if(!can_run) {
+          release(&p->lock);
+          continue;
+        }
+
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
@@ -604,6 +652,71 @@ kkill(int pid)
       }
       release(&p->lock);
       return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
+}
+
+int
+setpowermode_pid(int pid, int mode)
+{
+  struct proc *p;
+
+  if(mode != POWER_NORMAL && mode != POWER_ECO)
+    return -1;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->state != UNUSED && p->pid == pid){
+      p->power_mode = mode;
+      p->eco_skip_counter = 0;
+      release(&p->lock);
+      return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
+}
+
+int
+setcpulimit_pid(int pid, int limit)
+{
+  struct proc *p;
+  uint now;
+
+  if(limit < 0)
+    return -1;
+
+  acquire(&tickslock);
+  now = ticks;
+  release(&tickslock);
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->state != UNUSED && p->pid == pid){
+      p->cpu_budget = limit;
+      p->ticks_used = 0;
+      p->budget_window_start = now;
+      release(&p->lock);
+      return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
+}
+
+int
+getcputicks_pid(int pid)
+{
+  struct proc *p;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->state != UNUSED && p->pid == pid){
+      int t = p->ticks_total;
+      release(&p->lock);
+      return t;
     }
     release(&p->lock);
   }
