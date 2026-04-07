@@ -149,12 +149,10 @@ UPROGS=\
 	$U/_busyspin\
 	$U/_powerdemo\
 	$U/_proccost\
-	$U/_spin\
 	$U/_writer\
 	$U/_syshealth\
 	$U/_usagectl\
-	$U/_usagestat\
-	$U/_busy
+	$U/_usagestat
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

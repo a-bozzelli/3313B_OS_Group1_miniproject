@@ -4,7 +4,7 @@
 int
 main(int argc, char **argv)
 {
-  int reports = 10;
+  int reports = 0;
   char *label = "busyspin";
   int pid = getpid();
 
