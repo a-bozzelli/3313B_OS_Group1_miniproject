@@ -24,6 +24,7 @@
 #define SYS_setcpulimit 23
 #define SYS_getcputicks 24
 #define SYS_proccost 25
+#define SYS_getsyshealth 26
 
 /* =========================================================
  * FEATURE 2: EXPENSIVE PROCESS ANALYSIS

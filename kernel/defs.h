@@ -58,6 +58,7 @@ void            ireclaim(int);
 // kalloc.c
 void*           kalloc(void);
 void            kfree(void *);
+uint            kfreepages(void);
 void            kinit(void);
 
 // log.c
@@ -141,10 +142,15 @@ void            syscall();
 
 // trap.c
 extern uint     ticks;
+extern uint     active_ticks;
+extern uint     idle_ticks;
 void            trapinit(void);
 void            trapinithart(void);
 extern struct spinlock tickslock;
 void            prepare_return(void);
+
+// proc.c (extra globals)
+extern uint     context_switches;
 
 // uart.c
 void            uartinit(void);

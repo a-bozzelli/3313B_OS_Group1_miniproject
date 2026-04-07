@@ -53,3 +53,4 @@ entry("getcputicks");
  # =========================================================
 
  entry("proccost");
+entry("getsyshealth");

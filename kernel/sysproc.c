@@ -6,6 +6,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
+#include "syshealth.h"
 
 uint64
 sys_exit(void)
@@ -209,3 +210,41 @@ sys_proccost(void)
 }
 
 // ===== FEATURE 2 END: Expensive Process Analysis =====
+
+// Fill a struct syshealth with current system statistics.
+uint64
+sys_getsyshealth(void)
+{
+  uint64 addr;
+  argaddr(0, &addr);
+
+  struct syshealth sh;
+
+  // Snapshot tick counters atomically
+  acquire(&tickslock);
+  sh.uptime_ticks = ticks;
+  sh.active_ticks = active_ticks;
+  sh.idle_ticks   = idle_ticks;
+  release(&tickslock);
+
+  sh.context_switches = context_switches;
+  sh.free_pages       = kfreepages();
+
+  // Count process states
+  sh.nproc_running = 0;
+  sh.nproc_total   = 0;
+  extern struct proc proc[];
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->state == UNUSED) continue;
+    sh.nproc_total++;
+    if(p->state == RUNNING || p->state == RUNNABLE)
+      sh.nproc_running++;
+  }
+
+  // Copy struct out to userspace
+  if(copyout(myproc()->pagetable, addr,
+             (char *)&sh, sizeof(sh)) < 0)
+    return -1;
+  return 0;
+}

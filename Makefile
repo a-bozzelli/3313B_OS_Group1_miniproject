@@ -151,6 +151,7 @@ UPROGS=\
 	$U/_proccost\
 	$U/_spin\
 	$U/_writer\
+	$U/_syshealth\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

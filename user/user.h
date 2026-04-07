@@ -64,6 +64,8 @@ int getcputicks(int);
 // ===== FEATURE 2 START: Expensive Process Analysis =====
 int proccost(struct proccostinfo *info, int max);
 // ===== FEATURE 2 END: Expensive Process Analysis =====
+struct syshealth;
+int getsyshealth(struct syshealth*);
 
 // ulib.c
 int stat(const char*, struct stat*);

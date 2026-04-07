@@ -113,6 +113,7 @@ extern uint64 sys_getcputicks(void);
 // ===== FEATURE 2 START: Expensive Process Analysis =====
 extern uint64 sys_proccost(void);
 // ===== FEATURE 2 END: Expensive Process Analysis =====
+extern uint64 sys_getsyshealth(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -150,6 +151,7 @@ static uint64 (*syscalls[])(void) = {
   // ===== FEATURE 2 START: Expensive Process Analysis =====
   [SYS_proccost] sys_proccost,
   // ===== FEATURE 2 END: Expensive Process Analysis =====
+[SYS_getsyshealth] sys_getsyshealth,
 };
 
 void
