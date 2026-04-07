@@ -5,14 +5,10 @@ static void
 burn_cpu(char *label)
 {
   volatile uint x = 0;
-  int pid = getpid();
+  (void)label;
 
   while(1){
     x++;
-    if((x % 50000000) == 0){
-      // Keep occasional output so demo shows the process is alive.
-      printf("%s pid=%d cputicks=%d\n", label, pid, getcputicks(pid));
-    }
   }
 }
 
@@ -53,12 +49,9 @@ main(void)
 
   printf("powerdemo: normal pid=%d, eco pid=%d (eco + budget=3 ticks/window)\n",
          normal, eco);
-
-  for(int i = 1; i <= 6; i++){
-    pause(20);
-    printf("sample %d: normal_ticks=%d eco_ticks=%d\n",
-           i, getcputicks(normal), getcputicks(eco));
-  }
+  pause(60);
+  printf("powerdemo result: normal_ticks=%d eco_ticks=%d\n",
+         getcputicks(normal), getcputicks(eco));
 
   kill(normal);
   kill(eco);

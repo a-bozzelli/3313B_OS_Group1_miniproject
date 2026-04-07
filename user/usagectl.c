@@ -13,6 +13,5 @@ main(int argc, char **argv)
     printf("Error: invalid PID or failed to set limit\n");
     return 1;
   }
-  printf("Limit set: PID %d → %d ticks\n", pid, max);
   return 0;
 }

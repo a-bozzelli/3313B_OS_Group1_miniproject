@@ -29,7 +29,6 @@ main(int argc, char **argv)
       fprintf(2, "powerctl: setpowermode failed for pid %d\n", pid);
       exit(1);
     }
-    printf("pid %d power mode set to normal\n", pid);
     exit(0);
   }
 
@@ -38,7 +37,6 @@ main(int argc, char **argv)
       fprintf(2, "powerctl: setpowermode failed for pid %d\n", pid);
       exit(1);
     }
-    printf("pid %d power mode set to eco\n", pid);
     exit(0);
   }
 
@@ -56,7 +54,6 @@ main(int argc, char **argv)
       fprintf(2, "powerctl: setcpulimit failed for pid %d\n", pid);
       exit(1);
     }
-    printf("pid %d cpu limit set to %d ticks/window\n", pid, limit);
     exit(0);
   }
 

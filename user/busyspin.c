@@ -20,8 +20,13 @@ main(int argc, char **argv)
     for(volatile int i = 0; i < 40000000; i++){
       // Intentional busy loop to consume CPU.
     }
-    printf("%s pid=%d report=%d uptime=%d cputicks=%d\n",
-           label, pid, r, uptime(), getcputicks(pid));
+    // Summary-only mode: do not print per-report progress.
+    (void)r;
+  }
+
+  if(reports > 0){
+    printf("%s pid=%d done reports=%d uptime=%d\n",
+           label, pid, reports, uptime());
   }
 
   exit(0);

@@ -3,7 +3,8 @@
 int
 main(int argc, char **argv)
 {
-  printf("busy process started (pid = %d)\n", getpid());
+  (void)argc;
+  (void)argv;
   volatile unsigned long i = 0;
   while(1){
     i++;

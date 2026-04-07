@@ -96,6 +96,18 @@ sort_by_cost(struct proccostinfo *info, int n)
 int
 main(int argc, char *argv[])
 {
+  int rows_to_print = 10;
+
+  if(argc > 1){
+    if(strcmp(argv[1], "all") == 0)
+      rows_to_print = MAX_PROCS;
+    else{
+      rows_to_print = atoi(argv[1]);
+      if(rows_to_print <= 0)
+        rows_to_print = 10;
+    }
+  }
+
   // Ask the kernel to fill in per-process accounting data.
   int n = proccost(g_info, MAX_PROCS);
   if(n < 0) {
@@ -108,6 +120,8 @@ main(int argc, char *argv[])
   // Sort processes by descending cost so the
   // most expensive ones appear first.
   sort_by_cost(g_info, n);
+  if(rows_to_print < n)
+    n = rows_to_print;
 
   // Print a simple header and one line per process.
   printf("PID ");
