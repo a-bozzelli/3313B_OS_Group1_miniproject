@@ -154,8 +154,7 @@ UPROGS=\
 	$U/_syshealth\
 	$U/_usagectl\
 	$U/_usagestat\
-	$U/_busy\
-	$U/_dorphan\
+	$U/_busy
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

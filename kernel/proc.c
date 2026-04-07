@@ -141,6 +141,7 @@ found:
 
   // ===== FEATURE 2 START: Expensive Process Analysis =====
   p->cpu_ticks = 0;
+  p->cpu_ticks_limit = 0;
   p->sched_count = 0;
   p->disk_writes = 0;
   // ===== FEATURE 2 END: Expensive Process Analysis =====
@@ -165,10 +166,6 @@ found:
   memset(&p->context, 0, sizeof(p->context));
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
-
-  // initialize accounting fields
-  p->cpu_ticks = 0;
-  p->cpu_ticks_limit = 0;
 
   return p;
 }
@@ -325,10 +322,6 @@ kfork(void)
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
 
-  // Inherit cpu limit, but child's accumulated ticks start at 0.
-  np->cpu_ticks = 0;
-  np->cpu_ticks_limit = p->cpu_ticks_limit;
-
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
     if(p->ofile[i])
@@ -343,6 +336,8 @@ kfork(void)
   np->ticks_total = 0;
   np->budget_window_start = p->budget_window_start;
   np->eco_skip_counter = 0;
+  np->cpu_ticks = 0;
+  np->cpu_ticks_limit = p->cpu_ticks_limit;
   release(&p->lock);
 
   pid = np->pid;
