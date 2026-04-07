@@ -27,6 +27,7 @@ struct cpu {
 };
 
 extern struct cpu cpus[NCPU];
+// NOTE: the global `proc` array is declared after `struct proc` is defined.
 
 // per-process data for the trap handling code in trampoline.S.
 // sits in a page by itself just under the trampoline page in the
@@ -109,7 +110,6 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-
   // power restriction fields (protected by p->lock)
   int power_mode;              // POWER_NORMAL or POWER_ECO
   int cpu_budget;              // budget in ticks per window; 0 means unlimited
@@ -129,6 +129,9 @@ struct proc {
   // Total number of timer ticks during which this process was RUNNING.
   // This is a coarse measure of CPU usage over the lifetime of the process.
   uint64 cpu_ticks;
+
+  // Optional hard CPU usage cap (0 means unlimited).
+  uint64 cpu_ticks_limit;
 
   // Number of times the scheduler chose this process to run.
   // This helps quantify how often the process has been scheduled.

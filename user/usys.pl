@@ -20,7 +20,7 @@ sub entry {
     print " ecall\n";
     print " ret\n";
 }
-	
+
 entry("fork");
 entry("exit");
 entry("wait");
@@ -54,3 +54,5 @@ entry("getcputicks");
 
  entry("proccost");
 entry("getsyshealth");
+entry("setusagelimit");
+entry("getusagestats");

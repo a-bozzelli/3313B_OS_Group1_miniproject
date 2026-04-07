@@ -25,6 +25,8 @@
 #define SYS_getcputicks 24
 #define SYS_proccost 25
 #define SYS_getsyshealth 26
+#define SYS_setusagelimit 27
+#define SYS_getusagestats 28
 
 /* =========================================================
  * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
