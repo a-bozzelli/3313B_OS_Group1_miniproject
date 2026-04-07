@@ -105,6 +105,15 @@ extern uint64 sys_setpowermode(void);
 extern uint64 sys_setcpulimit(void);
 extern uint64 sys_getcputicks(void);
 
+/* =========================================================
+ * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ * Prototype for the proccost syscall handler.
+ * ========================================================= */
+
+// ===== FEATURE 2 START: Expensive Process Analysis =====
+extern uint64 sys_proccost(void);
+// ===== FEATURE 2 END: Expensive Process Analysis =====
+
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -132,6 +141,15 @@ static uint64 (*syscalls[])(void) = {
 [SYS_setpowermode] sys_setpowermode,
 [SYS_setcpulimit] sys_setcpulimit,
 [SYS_getcputicks] sys_getcputicks,
+
+  /* =========================================================
+   * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+   * Map SYS_proccost to its kernel handler.
+   * ========================================================= */
+
+  // ===== FEATURE 2 START: Expensive Process Analysis =====
+  [SYS_proccost] sys_proccost,
+  // ===== FEATURE 2 END: Expensive Process Analysis =====
 };
 
 void

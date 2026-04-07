@@ -138,3 +138,74 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+/* =========================================================
+ * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ * System call implementation for retrieving per-process
+ * cost information from the kernel.
+ *
+ * int proccost(struct proccostinfo *info, int max)
+ *   - info: user pointer to an array of proccostinfo
+ *   - max:  maximum number of entries the user can store
+ *
+ * Returns the number of populated entries on success,
+ * or -1 on error. The cost field in each entry is
+ * computed as:
+ *   cost = cpu_ticks + 5 * disk_writes
+ * ========================================================= */
+
+// ===== FEATURE 2 START: Expensive Process Analysis =====
+
+uint64
+sys_proccost(void)
+{
+  uint64 uaddr;
+  int max;
+
+  // Fetch syscall arguments: user buffer address and max count.
+  // argaddr/argint do not return a status in this xv6 variant,
+  // so we simply call them and then validate the values.
+  argaddr(0, &uaddr);
+  argint(1, &max);
+  if(max <= 0)
+    return -1;
+
+  struct proc *p = myproc();
+  struct proccostinfo local[NPROC];
+  int count = 0;
+
+  // Walk the process table and snapshot accounting data
+  // while holding each process's lock to get a consistent
+  // view of its fields.
+  for(struct proc *q = proc; q < &proc[NPROC] && count < max; q++) {
+    acquire(&q->lock);
+    // Only report meaningful process entries. Skip slots that
+    // are completely unused or merely reserved (USED), since
+    // they do not correspond to runnable/sleeping/zombie
+    // processes with interesting accounting data.
+    if(q->state != UNUSED && q->state != USED) {
+      local[count].pid = q->pid;
+      safestrcpy(local[count].name, q->name, sizeof(local[count].name));
+      local[count].cpu_ticks = q->cpu_ticks;
+      local[count].sched_count = q->sched_count;
+      local[count].disk_writes = q->disk_writes;
+
+      // Simple cost model combining CPU and disk usage.
+      local[count].cost = local[count].cpu_ticks +
+                          5 * local[count].disk_writes;
+
+      count++;
+    }
+    release(&q->lock);
+  }
+
+  int bytes = count * sizeof(struct proccostinfo);
+  if(bytes > 0) {
+    if(copyout(p->pagetable, uaddr, (char*)local, bytes) < 0)
+      return -1;
+  }
+
+  return count;
+}
+
+// ===== FEATURE 2 END: Expensive Process Analysis =====

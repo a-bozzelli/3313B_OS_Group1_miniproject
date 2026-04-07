@@ -117,4 +117,58 @@ struct proc {
   int ticks_total;             // lifetime tick usage (for reporting/demo)
   uint budget_window_start;    // global tick when accounting window started
   int eco_skip_counter;        // scheduler-side counter for eco mode cadence
+  /* =========================================================
+   * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+   * Per-process accounting fields used for resource cost tracking.
+   * These counters are updated in clearly marked FEATURE 2 blocks
+   * to keep this feature easy to identify and merge.
+   * ========================================================= */
+
+  // ===== FEATURE 2 START: Expensive Process Analysis =====
+
+  // Total number of timer ticks during which this process was RUNNING.
+  // This is a coarse measure of CPU usage over the lifetime of the process.
+  uint64 cpu_ticks;
+
+  // Number of times the scheduler chose this process to run.
+  // This helps quantify how often the process has been scheduled.
+  uint64 sched_count;
+
+  // Approximate count of disk-backed write system calls performed
+  // by this process. We increment this once per write() that targets
+  // an inode-backed file (FD_INODE), which is a reasonable proxy for
+  // disk writes without invasive changes to the file system code.
+  uint64 disk_writes;
+
+  // ===== FEATURE 2 END: Expensive Process Analysis =====
 };
+
+/* =========================================================
+ * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ * Kernel-visible structure used to return per-process cost
+ * information to user space via the proccost() system call.
+ * A matching definition exists in user/user.h and must stay
+ * in sync for the syscall ABI to remain correct.
+ * ========================================================= */
+
+// ===== FEATURE 2 START: Expensive Process Analysis =====
+
+struct proccostinfo {
+  int    pid;                 // Process ID
+  char   name[16];            // Process name (truncated to 15 chars + NUL)
+
+  uint64 cpu_ticks;           // CPU ticks while RUNNING
+  uint64 sched_count;         // Number of times scheduled
+  uint64 disk_writes;         // Approximate disk-backed write() count
+
+  // Simple linear cost score combining CPU and disk usage.
+  // Currently: cost = cpu_ticks + 5 * disk_writes
+  uint64 cost;
+};
+
+// ===== FEATURE 2 END: Expensive Process Analysis =====
+
+// The global process table lives in proc.c but is
+// referenced by some FEATURE 2 code (e.g., sys_proccost).
+// Declare it here for kernel files that need to walk it.
+extern struct proc proc[];

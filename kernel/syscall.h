@@ -23,3 +23,13 @@
 #define SYS_setpowermode 22
 #define SYS_setcpulimit 23
 #define SYS_getcputicks 24
+#define SYS_proccost 25
+
+/* =========================================================
+ * FEATURE 2: EXPENSIVE PROCESS ANALYSIS
+ * System call number for retrieving per-process cost data.
+ * ========================================================= */
+
+// ===== FEATURE 2 START: Expensive Process Analysis =====
+/* defined above: SYS_proccost 25 */
+// ===== FEATURE 2 END: Expensive Process Analysis =====

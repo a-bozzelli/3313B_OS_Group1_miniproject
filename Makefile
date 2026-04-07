@@ -148,6 +148,9 @@ UPROGS=\
 	$U/_powerctl\
 	$U/_busyspin\
 	$U/_powerdemo\
+	$U/_proccost\
+	$U/_spin\
+	$U/_writer\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
