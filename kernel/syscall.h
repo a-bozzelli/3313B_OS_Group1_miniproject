@@ -20,3 +20,6 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+#define SYS_setpowermode 22
+#define SYS_setcpulimit 23
+#define SYS_getcputicks 24

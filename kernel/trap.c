@@ -80,9 +80,14 @@ usertrap(void)
   if(killed(p))
     kexit(-1);
 
-  // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  // Account one timer tick of CPU time to this process.
+  if(which_dev == 2){
+    acquire(&p->lock);
+    p->ticks_used++;
+    p->ticks_total++;
+    release(&p->lock);
     yield();
+  }
 
   prepare_return();
 

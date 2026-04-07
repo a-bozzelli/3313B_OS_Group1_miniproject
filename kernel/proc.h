@@ -81,6 +81,11 @@ struct trapframe {
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+enum powermode { POWER_NORMAL = 0, POWER_ECO = 1 };
+
+#define ECO_SKIP_INTERVAL 3
+#define CPU_BUDGET_WINDOW_TICKS 50
+
 // Per-process state
 struct proc {
   struct spinlock lock;
@@ -104,4 +109,12 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  // power restriction fields (protected by p->lock)
+  int power_mode;              // POWER_NORMAL or POWER_ECO
+  int cpu_budget;              // budget in ticks per window; 0 means unlimited
+  int ticks_used;              // ticks consumed in current window
+  int ticks_total;             // lifetime tick usage (for reporting/demo)
+  uint budget_window_start;    // global tick when accounting window started
+  int eco_skip_counter;        // scheduler-side counter for eco mode cadence
 };
