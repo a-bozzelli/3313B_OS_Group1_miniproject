@@ -88,6 +88,7 @@ usertrap(void)
     p->ticks_used++;
     p->ticks_total++;
     if(p->cpu_ticks_limit > 0 && p->cpu_ticks > p->cpu_ticks_limit)
+      printf("process %d (%s) exceeded cpu limit (%d ticks)\n", p->pid, p->name, (int)p->cpu_ticks_limit);
       p->killed = 1;
     release(&p->lock);
     yield();
