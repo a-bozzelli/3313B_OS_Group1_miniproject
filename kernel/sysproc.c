@@ -172,8 +172,8 @@ sys_proccost(void)
     return -1;
 
   struct proc *p = myproc();
-  struct proccostinfo local[NPROC];
   int count = 0;
+  struct proccostinfo entry;
 
   // Walk the process table and snapshot accounting data
   // while holding each process's lock to get a consistent
@@ -185,27 +185,33 @@ sys_proccost(void)
     // they do not correspond to runnable/sleeping/zombie
     // processes with interesting accounting data.
     if(q->state != UNUSED && q->state != USED) {
-      local[count].pid = q->pid;
-      safestrcpy(local[count].name, q->name, sizeof(local[count].name));
-      local[count].cpu_ticks = q->cpu_ticks;
-      local[count].sched_count = q->sched_count;
-      local[count].disk_writes = q->disk_writes;
+      entry.pid = q->pid;
+      safestrcpy(entry.name, q->name, sizeof(entry.name));
+      entry.cpu_ticks = q->cpu_ticks;
+      entry.sched_count = q->sched_count;
+      entry.disk_writes = q->disk_writes;
 
       // Simple cost model combining CPU and disk usage.
-      local[count].cost = local[count].cpu_ticks +
-                          5 * local[count].disk_writes;
+      entry.cost = entry.cpu_ticks + 5 * entry.disk_writes;
+
+      // Release the process lock before copying out to user space,
+      // since copyout may sleep.
+      release(&q->lock);
+
+      // Copy this entry directly into the user-provided array at
+      // the appropriate offset.
+      if(copyout(p->pagetable,
+                 uaddr + count * sizeof(struct proccostinfo),
+                 (char *)&entry,
+                 sizeof(struct proccostinfo)) < 0) {
+        return -1;
+      }
 
       count++;
+      continue;
     }
     release(&q->lock);
   }
-
-  int bytes = count * sizeof(struct proccostinfo);
-  if(bytes > 0) {
-    if(copyout(p->pagetable, uaddr, (char*)local, bytes) < 0)
-      return -1;
-  }
-
   return count;
 }
 

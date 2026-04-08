@@ -7,7 +7,12 @@
  * in the disk_writes and cost columns reported by proccost.
  *
  * Usage:
- *   $ writer &
+ *   $ writer &          # run indefinitely (original behavior)
+ *   $ writer 300 &      # run for ~300 iterations then exit
+ *
+ * The optional numeric argument lets you cap how long writer
+ * runs so it doesn't dominate the system for too long when
+ * you're experimenting with proccost.
  * ========================================================= */
 
 #include "kernel/types.h"
@@ -18,11 +23,44 @@
 
 static const char *filename = "writer.log";
 
+// Parse a positive decimal integer from a string. Returns
+// -1 on error, or the parsed value (> 0) on success.
+static int
+parse_positive_int(const char *s)
+{
+  int n = 0;
+
+  if(s == 0 || *s == 0)
+    return -1;
+
+  while(*s){
+    if(*s < '0' || *s > '9')
+      return -1;
+    n = n * 10 + (*s - '0');
+    s++;
+  }
+
+  if(n <= 0)
+    return -1;
+  return n;
+}
+
 int
 main(int argc, char *argv[])
 {
   char buf[128];
   int i;
+
+  // Optional limit on the number of write iterations.
+  // If no argument is given, run indefinitely (original behavior).
+  int max_iters = -1;
+  if(argc >= 2){
+    max_iters = parse_positive_int(argv[1]);
+    if(max_iters < 0){
+      printf("writer: invalid limit '%s'\n", argv[1]);
+      exit(1);
+    }
+  }
 
   // Prepare a deterministic buffer so that each write() has
   // some non-trivial size but still fits easily in a block.
@@ -30,8 +68,12 @@ main(int argc, char *argv[])
     buf[i] = 'A' + (i % 26);
   }
 
-  // Loop forever creating write-heavy activity.
+  // Loop, optionally bounded by max_iters if provided.
+  int iter = 0;
   for(;;) {
+    if(max_iters > 0 && iter >= max_iters)
+      break;
+
     int fd = open(filename, O_CREATE | O_WRONLY);
     if(fd < 0) {
       printf("writer: failed to open %s\n", filename);
@@ -49,9 +91,11 @@ main(int argc, char *argv[])
     }
 
     close(fd);
+
+    iter++;
   }
 
-  // Not reached.
+  // Exit cleanly once the requested number of iterations completes.
   exit(0);
 }
 
